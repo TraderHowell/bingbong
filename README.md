@@ -1,2 +1,2 @@
-# bingbong
-Quickly create pleasant chime sounds.
+# Bing Bong
+Quickly create pleasant chime sounds for use as push notifications.
