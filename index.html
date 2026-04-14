@@ -2,11 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bing Bong</title>
+    <!-- Adaptive SVG Favicon -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cstyle%3Epath %7B fill: %231f2328; %7D @media (prefers-color-scheme: dark) %7B path %7B fill: %23c9d1d9; %7D %7D%3C/style%3E%3Cpath d='M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z'/%3E%3C/svg%3E">
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         :root {
             --bg: #0d1117; --surface: #161b22; --hover: #21262d; --border: #30363d;
             --text: #c9d1d9; --sub: #8b949e; --primary: #58a6ff; --success: #238636;
@@ -20,6 +21,7 @@
             font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text);
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             min-height: 100vh; margin: 0; padding: 10px; transition: background 0.2s;
+            overscroll-behavior: none; 
         }
         .container {
             background: var(--surface); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--border);
@@ -34,15 +36,15 @@
             background: var(--surface); color: var(--text); 
         }
         .labels { display: flex; justify-content: space-around; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 2.5rem; }
-        .note-name { font-size: 14px; font-weight: 700; color: var(--sub); width: 33%; text-align: center; }
+        .note-name { font-size: 16px; font-weight: 700; color: var(--sub); width: 33.33%; text-align: center; }
         .note-name.highlight { color: var(--primary); transform: scale(1.2); transition: 0.2s; }
         .sequencer { display: flex; justify-content: space-around; margin-bottom: 3rem; }
-        .channel { display: flex; flex-direction: column; align-items: center; gap: 24px; transition: opacity 0.2s; width: 33%; }
+        .channel { display: flex; flex-direction: column; align-items: center; gap: 24px; transition: opacity 0.2s; width: 33.33%; }
         .channel.muted { opacity: 0.25; }
         .slider-wrap { height: 160px; width: var(--sz); display: flex; align-items: center; justify-content: center; position: relative; }
         .pitch-slider { 
             -webkit-appearance: none; width: 140px; height: 6px; background: var(--border); 
-            border-radius: 10px; transform: rotate(-90deg); cursor: pointer; outline: none; 
+            border-radius: 10px; transform: rotate(-90deg); cursor: pointer; outline: none; touch-action: none; 
         }
         .pitch-slider::-webkit-slider-thumb { 
             -webkit-appearance: none; width: var(--sz); height: var(--sz); 
@@ -63,7 +65,7 @@
         .btn-play { background: var(--success); color: #fff; border: none; flex: 1; }
         .btn-stop { flex: 1; }
         .btn-export { color: var(--primary); min-width: 100px; flex-grow: 0; }
-        footer { margin-top: 1.5rem; text-align: center; font-size: 0.75rem; color: var(--sub); display: flex; align-items: center; justify-content: center; gap: 5px; opacity: 0.8; width: 100%; padding: 0 10px; }
+        footer { margin-top: 1.5rem; text-align: center; font-size: 0.75rem; color: var(--sub); display: flex; align-items: center; justify-content: center; gap: 5px; opacity: 0.8; width: 100%; }
         .heart { color: #f85149; width: 12px; height: 12px; fill: currentColor; }
         .icon { width: 18px; height: 18px; fill: currentColor; }
         .footer-link { color: inherit; text-decoration: none; font-weight: 600; }
@@ -80,7 +82,7 @@
 
 <div class="container">
     <header>
-        <div class="header-title"><h1>Bing Bong</h1><p>Version 1.0</p></div>
+        <div class="header-title"><h1>Bing Bong</h1><p>Version 1.2</p></div>
         <button class="theme-toggle" onclick="toggleT()" id="t-btn"></button>
     </header>
     <div class="labels" id="labels"></div>
@@ -160,8 +162,7 @@
         if(!act.length) return;
         const sr = 44100, oCtx = new OfflineAudioContext(1, sr * ((act[act.length-1] * 1.0) + 2.2), sr);
         act.forEach(i => play(oCtx, freqs[document.getElementById(`p-${i}`).value], i));
-        const buf = await oCtx.startRendering(), names = act.map(i => notes[document.getElementById(`p-${i}`).value]).join('-');
-        const b = new ArrayBuffer(44 + buf.length * 2), v = new DataView(b), smp = buf.getChannelData(0);
+        const buf = await oCtx.startRendering(), smp = buf.getChannelData(0), b = new ArrayBuffer(44 + smp.length * 2), v = new DataView(b);
         const wS = (o, s) => { for(let i=0; i<s.length; i++) v.setUint8(o+i, s.charCodeAt(i)); };
         wS(0, 'RIFF'); v.setUint32(4, 36 + smp.length * 2, true); wS(8, 'WAVE'); wS(12, 'fmt ');
         v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
@@ -171,7 +172,7 @@
             let s = Math.max(-1, Math.min(1, smp[i]));
             v.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
         }
-        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([b], {type:'audio/wav'})); a.download = names + ".wav"; a.click();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([b], {type:'audio/wav'})); a.download = act.map(i => notes[document.getElementById(`p-${i}`).value]).join('-') + ".wav"; a.click();
     };
 </script>
 </body>
